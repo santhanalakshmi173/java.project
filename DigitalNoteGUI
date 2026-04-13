@@ -1,0 +1,138 @@
+mport javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+
+public class DigitalNoteOrganizer extends JFrame {
+
+    JLabel titleLabel, contentLabel;
+    JTextField titleField;
+    JTextArea contentArea;
+    JButton addBtn, saveBtn, loadBtn, deleteBtn;
+    JTable table;
+    DefaultTableModel model;
+
+    public DigitalNoteOrganizer() {
+        setTitle("Digital Note Organizer");
+        setSize(700, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Top Panel
+        JPanel topPanel = new JPanel(new GridLayout(2, 2));
+
+        titleLabel = new JLabel("Note Title:");
+        titleField = new JTextField();
+
+        contentLabel = new JLabel("Note Content:");
+        contentArea = new JTextArea();
+
+        topPanel.add(titleLabel);
+        topPanel.add(titleField);
+        topPanel.add(contentLabel);
+        topPanel.add(new JScrollPane(contentArea));
+
+        add(topPanel, BorderLayout.NORTH);
+
+        // Table
+        model = new DefaultTableModel();
+        model.addColumn("Title");
+
+        table = new JTable(model);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+
+        // Buttons
+        JPanel btnPanel = new JPanel();
+
+        addBtn = new JButton("Add Note");
+        saveBtn = new JButton("Save to File");
+        loadBtn = new JButton("Load File");
+        deleteBtn = new JButton("Delete Note");
+
+        btnPanel.add(addBtn);
+        btnPanel.add(saveBtn);
+        btnPanel.add(loadBtn);
+        btnPanel.add(deleteBtn);
+
+        add(btnPanel, BorderLayout.SOUTH);
+
+        // Button Actions
+
+        // Add Note
+        addBtn.addActionListener(e -> {
+            String title = titleField.getText();
+            if (!title.isEmpty()) {
+                model.addRow(new Object[]{title});
+                titleField.setText("");
+                contentArea.setText("");
+            } else {
+                JOptionPane.showMessageDialog(this, "Enter title!");
+            }
+        });
+
+        // Save to File
+        saveBtn.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int option = fileChooser.showSaveDialog(this);
+
+            if (option == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = fileChooser.getSelectedFile();
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+                    for (int i = 0; i < model.getRowCount(); i++) {
+                        writer.write(model.getValueAt(i, 0).toString());
+                        writer.newLine();
+                    }
+
+                    writer.close();
+                    JOptionPane.showMessageDialog(this, "Saved Successfully!");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        // Load File
+        loadBtn.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int option = fileChooser.showOpenDialog(this);
+
+            if (option == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = fileChooser.getSelectedFile();
+                    BufferedReader reader = new BufferedReader(new FileReader(file));
+
+                    model.setRowCount(0);
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        model.addRow(new Object[]{line});
+                    }
+
+                    reader.close();
+                    JOptionPane.showMessageDialog(this, "Loaded Successfully!");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        // Delete Note
+        deleteBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                model.removeRow(row);
+            } else {
+                JOptionPane.showMessageDialog(this, "Select a note to delete!");
+            }
+        });
+
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new DigitalNoteOrganizer();
+    }
+}
